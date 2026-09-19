@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Comprobante de Pago - Banreservas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=Open&#43;Sans:ital,wght@0,300..800;1,300..800&amp;display=swap" rel="stylesheet"><style type="text/css">
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Open Sans', sans-serif;
+      }
+      table {
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+      .container {
+        width: 327px;
+        margin: 0 auto;
+      }
+      .email_content {
+        width: 327px;
+      }
+      .logo {
+        display: block;
+        margin: 0 auto;
+        padding-top: 24px;
+        padding-bottom: 24px;
+      }
+      .success {
+        display: block;
+        margin: auto;
+      }
+      .message_title {
+        text-align: center;
+        color: #264e72;
+        padding-top: 16px;
+        height: 32px;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+      }
+      .message_body {
+        text-align: center;
+        color: #353536;
+        height: 66px;
+        padding-top: 12px;
+        padding-bottom: 24px;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 22px;
+      }
+      .amount_container {
+        background-color: #f5fcff;
+        border: 1px solid #def3ff;
+        width: 327px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        border-collapse: separate;
+        border-spacing: 0;
+        box-shadow: 0px 2px 6px 0px #0000000a;
+      }
+      .amount_label {
+        text-align: center;
+        color: #63666a;
+        font-weight: 400;
+        height: 20px;
+        font-size: 14px;
+        line-height: 20px;
+        padding-top: 12px;
+      }
+      .amount_value {
+        text-align: center;
+        color: #00558C;
+        font-weight: 700;
+        height: 40px;
+        font-size: 32px;
+        line-height: 40px;
+        padding-bottom: 12px;
+      }
+      .amount_value_subtitle {
+        text-align: center;
+        color: #353536;
+        font-weight: 400;
+        height: 20px;
+        font-size: 14px;
+        line-height: 20px;
+        border-radius: 0 0 8px 8px;
+        border-spacing: 1px;
+        padding-bottom: 12px;
+      }
+      .concept {
+        background-color: #fff;
+        text-align: center;
+        color: #353536;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 20px;
+        border-radius: 0 0 8px 8px;
+        border-spacing: 1px;
+        padding-top: 12px;
+        padding-left: 16px;
+        padding-right: 16px;
+        border: 1px solid #def3ff;
+        border-width: 1px 0 0 0;
+        padding-bottom: 12px;
+      }
+      .details_container {
+        background-color: #ffffff;
+        border: 1px solid #ececed;
+        width: 327px;
+        border-radius: 8px;
+        border-collapse: separate;
+        border-spacing: 1px;
+      }
+      .details_table {
+        width: 295px;
+        margin-left: 12px;
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+      .details_table_row {
+        border: 1px solid #ececed;
+        border-width: 0 0 1px 0;
+      }
+      .details_table_row_icon {
+        vertical-align: top;
+        width: 40px;
+      }
+      .details_table_row_title {
+        text-align: left;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 20px;
+        color: #63666a;
+      }
+      .details_table_row_subtitle {
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 20px;
+        color: #353536;
+      }
+      .tr_padding {
+        height: 16px;
+      }
+      .details_table_footer {
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        text-align: center;
+        padding-top: 12px;
+        padding-bottom: 24px;
+      }
+      .disclamer_container {
+        width: 327px;
+        height: 158px;
+        background-color: #fafafa;
+        border: 1px solid #ececed;
+        border-radius: 8px;
+        border-collapse: separate;
+        border-spacing: 1px;
+      }
+      .disclamer_text {
+        width: 292px;
+        height: 126px;
+        font-weight: 400;
+        font-size: 10px;
+        line-height: 14px;
+        padding: 0 16px 0 16px;
+      }
+      .footer {
+        padding-top: 24px;
+      }
+
+    </style>
+</head>
+<body>
+<table class="container">
+<tbody>
+<tr>
+<td>
+<table class="email_content">
+<tbody>
+<tr>
+<td><img class="logo" src="https://cdn.mcauto-images-production.sendgrid.net/d7ecb54f829bfcdf/ab92511d-67f1-402e-b5e6-59ec0d0c594e/321x74.png" width="206.13px" height="47.2px">
+</td>
+</tr>
+<tr>
+<td><img class="success" src="https://cdn.mcauto-images-production.sendgrid.net/d7ecb54f829bfcdf/199d0b22-88c3-4a07-b0f6-d734e7517902/180x241.png" width="96px" height="128.4px">
+</td>
+</tr>
+<tr>
+<td class="message_title">¡Transacción realizada!</td>
+</tr>
+<tr>
+<td class="message_body">Te notificamos que la siguiente transacción fue realizada desde tu App Banreservas:
+</td>
+</tr>
+<tr>
+<td>
+<table class="amount_container">
+<tbody>
+<tr>
+<td class="amount_label">Monto:</td>
+</tr>
+<tr>
+<td class="amount_value">DOP 4,340.00</td>
+</tr>
+<tr>
+<td class="concept" style="display: block;">PAGO de Producros </td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<table class="details_container">
+<tbody>
+<tr>
+<td>
+<table class="details_table" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td class="details_table_row">
+<table cellspacing="0" cellpadding="0">
+<tbody>
+<tr class="tr_padding">
+</tr>
+<tr>
+<td rowspan="3" class="details_table_row_icon"><img src="https://cdn.mcauto-images-production.sendgrid.net/d7ecb54f829bfcdf/60c2d2cc-573b-4d94-b76f-07a96304d9c7/241x241.png" width="24px" height="24px">
+</td>
+<td class="details_table_row_title">Transacción: </td>
+</tr>
+<tr>
+<td class="details_table_row_subtitle">Transferencia a Tercero </td>
+</tr>
+<tr class="tr_padding">
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td class="details_table_row">
+<table cellspacing="0" cellpadding="0">
+<tbody>
+<tr class="tr_padding">
+</tr>
+<tr>
+<td rowspan="3" class="details_table_row_icon"><img src="https://cdn.mcauto-images-production.sendgrid.net/d7ecb54f829bfcdf/6972d62c-a032-41f3-8025-2fd971eae789/240x240.png" width="24px" height="24px">
+</td>
+<td class="details_table_row_title">Origen: </td>
+</tr>
+<tr>
+<td class="details_table_row_subtitle">JUANA PEREZ DE LA CRUZ, Cuenta de ahorro DOP ** - 1111
+</td>
+</tr>
+<tr class="tr_padding">
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td class="details_table_row">
+<table cellspacing="0" cellpadding="0">
+<tbody>
+<tr class="tr_padding">
+</tr>
+<tr>
+<td rowspan="3" class="details_table_row_icon"><img src="https://cdn.mcauto-images-production.sendgrid.net/d7ecb54f829bfcdf/773d8b1f-413b-4142-be38-ff28aaaf2fa8/241x240.png" width="24px" height="24px">
+</td>
+<td class="details_table_row_title">Destino: </td>
+</tr>
+<tr>
+<td class="details_table_row_subtitle">COMERCIAL EJEMPLO SRL, Cuenta corriente DOP ** - 2222
+</td>
+</tr>
+<tr class="tr_padding">
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td class="details_table_row">
+<table cellspacing="0" cellpadding="0">
+<tbody>
+<tr class="tr_padding">
+</tr>
+<tr>
+<td rowspan="3" class="details_table_row_icon"><img src="https://cdn.mcauto-images-production.sendgrid.net/d7ecb54f829bfcdf/44eeb560-287f-455d-a29c-3b6ccb156fa0/241x241.png" width="24px" height="24px">
+</td>
+<td class="details_table_row_title">Fecha de transacción: </td>
+</tr>
+<tr>
+<td class="details_table_row_subtitle">11 de Abril 2026 - 02:24 PM </td>
+</tr>
+<tr class="tr_padding">
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td class="details_table_row" style="display: block;">
+<table cellspacing="0" cellpadding="0">
+<tbody>
+<tr class="tr_padding">
+</tr>
+<tr>
+<td rowspan="3" class="details_table_row_icon"><img src="http://cdn.mcauto-images-production.sendgrid.net/d7ecb54f829bfcdf/91f81dc3-a980-48ed-8678-2f4badfda316/240x241.png" width="24px" height="24px">
+</td>
+<td class="details_table_row_title">Impuestos: </td>
+</tr>
+<tr>
+<td class="details_table_row_subtitle">DOP 6.51 </td>
+</tr>
+<tr class="tr_padding">
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<table cellspacing="0" cellpadding="0">
+<tbody>
+<tr class="tr_padding">
+</tr>
+<tr>
+<td rowspan="3" class="details_table_row_icon"><img src="https://cdn.mcauto-images-production.sendgrid.net/d7ecb54f829bfcdf/b15450c5-c38e-491c-b0c5-4ed1c8a76055/240x240.png" width="24px" height="24px">
+</td>
+<td class="details_table_row_title">Número de transacción: </td>
+</tr>
+<tr>
+<td class="details_table_row_subtitle">100000000001 </td>
+</tr>
+<tr class="tr_padding">
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td class="details_table_footer"></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<table class="disclamer_container">
+<tbody>
+<tr>
+<td class="disclamer_text">
+<p>Este correo fue enviado a <span style="font-weight: 700">usuario.ejemplo@gmail.com</span> Banreservas envía este correo electrónico porque tu perfil nos indica que esta información es relevante para ti.<br>
+<br>
+No respondas a este mensaje, has sido notificado de forma automática.<br>
+<br>
+<span style="font-weight: 700">De no reconocer esta transacción</span>, favor contactarnos al (809) 960-4400
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tbody>
+<tr>
+<td class="footer"><img src="https://cdn.mcauto-images-production.sendgrid.net/d7ecb54f829bfcdf/aacf199b-3300-480a-9c22-56285d8c4d4a/801x172.png" width="327px" height="70.01px">
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
