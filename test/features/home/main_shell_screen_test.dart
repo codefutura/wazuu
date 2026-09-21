@@ -153,6 +153,9 @@ class _EmptyTransaccionesRepository implements TransaccionesRepository {
     required int tarjetaId,
     required String tarjetaUltimos4Digitos,
   }) async {}
+
+  @override
+  Future<Set<String>> obtenerEmailIdsExistentes(List<String> ids) async => {};
 }
 
 class _EmptyCategoriasRepository implements CategoriasRepository {
@@ -325,6 +328,9 @@ class _ConTransaccionesRepository implements TransaccionesRepository {
     required int tarjetaId,
     required String tarjetaUltimos4Digitos,
   }) async {}
+
+  @override
+  Future<Set<String>> obtenerEmailIdsExistentes(List<String> ids) async => {};
 }
 
 class _ConCategoriasRepository implements CategoriasRepository {

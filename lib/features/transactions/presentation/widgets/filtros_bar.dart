@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../categorization/data/providers/categorization_providers.dart';
 import '../providers/transacciones_filtro_provider.dart';
 
 class FiltrosBar extends ConsumerWidget {
@@ -12,7 +11,7 @@ class FiltrosBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final categoriasAsync = ref.watch(todasLasCategoriasProvider);
+    final categoriasAsync = ref.watch(categoriasGastoProvider);
     final tarjetasAsync = ref.watch(tarjetasDisponiblesProvider);
     final controller = ref.read(
       transaccionesFiltroControllerProvider.notifier,
@@ -99,7 +98,18 @@ class FiltrosBar extends ConsumerWidget {
                           filtro.desde != null && filtro.hasta != null
                           ? DateTimeRange(
                               start: filtro.desde!,
-                              end: filtro.hasta!,
+                              // `hasta` se guarda al final del día
+                              // (23:59:59.999) para que el filtro
+                              // incluya el día completo — se trunca
+                              // de vuelta a medianoche solo para
+                              // mostrarlo en el picker, que si no
+                              // podría chocar con `lastDate` cuando
+                              // el rango termina hoy mismo.
+                              end: DateTime(
+                                filtro.hasta!.year,
+                                filtro.hasta!.month,
+                                filtro.hasta!.day,
+                              ),
                             )
                           : null,
                       // El botón "Guardar" del diálogo por defecto queda

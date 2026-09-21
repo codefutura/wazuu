@@ -36,24 +36,12 @@ class AppDrawer extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/images/icon-app.jpeg',
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.cover,
-                  ),
+                Image.asset(
+                  'assets/images/wazuu_wordmark_white.png',
+                  height: 22,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Wazuu',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
                 FutureBuilder<String?>(
                   future: ref
                       .read(authRepositoryProvider.future)

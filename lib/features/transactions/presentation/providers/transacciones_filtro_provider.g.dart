@@ -65,7 +65,7 @@ final class TransaccionesFiltroControllerProvider
 }
 
 String _$transaccionesFiltroControllerHash() =>
-    r'7c02549ab3e34176dd5a3771bc1bcfc3183c7427';
+    r'cd8112893e8f8ee097de20ed5d7b4915cc997c50';
 
 /// Estado de los filtros de la lista de transacciones (sección 9.4 de
 /// CLAUDE.md — filtrable por fecha, categoría, tarjeta).
@@ -175,3 +175,53 @@ final class TarjetasDisponiblesProvider
 
 String _$tarjetasDisponiblesHash() =>
     r'a4237438dc7003919c77afd419a59471cc607f4a';
+
+/// Solo las categorías de gasto (sección 8 de CLAUDE.md) — el filtro
+/// de la lista de transacciones no ofrece las de ingreso (Nómina,
+/// Transferencia, Otro ingreso) como opción.
+
+@ProviderFor(categoriasGasto)
+final categoriasGastoProvider = CategoriasGastoProvider._();
+
+/// Solo las categorías de gasto (sección 8 de CLAUDE.md) — el filtro
+/// de la lista de transacciones no ofrece las de ingreso (Nómina,
+/// Transferencia, Otro ingreso) como opción.
+
+final class CategoriasGastoProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Categoria>>,
+          List<Categoria>,
+          FutureOr<List<Categoria>>
+        >
+    with $FutureModifier<List<Categoria>>, $FutureProvider<List<Categoria>> {
+  /// Solo las categorías de gasto (sección 8 de CLAUDE.md) — el filtro
+  /// de la lista de transacciones no ofrece las de ingreso (Nómina,
+  /// Transferencia, Otro ingreso) como opción.
+  CategoriasGastoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'categoriasGastoProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$categoriasGastoHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Categoria>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Categoria>> create(Ref ref) {
+    return categoriasGasto(ref);
+  }
+}
+
+String _$categoriasGastoHash() => r'bb78c7c51467f5ad664c61c347492ce7cf33d822';

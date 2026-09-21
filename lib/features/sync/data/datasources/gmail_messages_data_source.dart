@@ -4,6 +4,7 @@ import 'package:googleapis/gmail/v1.dart' as gmail;
 
 import '../../../bank_parsers/domain/entities/raw_email.dart';
 import '../../../gmail/data/services/authenticated_http_client.dart';
+import '../../domain/exceptions/gmail_quota_exceeded_exception.dart';
 import '../../domain/repositories/gmail_messages_fetcher.dart';
 
 /// Trae y decodifica correos reales desde la Gmail API.
@@ -37,6 +38,9 @@ class GmailMessagesDataSource implements GmailMessagesFetcher {
         for (final mensaje in respuesta.messages ?? const <gmail.Message>[])
           if (mensaje.id != null) mensaje.id!,
       ];
+    } on gmail.DetailedApiRequestError catch (e) {
+      if (_esErrorDeCuota(e)) throw const GmailQuotaExceededException();
+      rethrow;
     } finally {
       client.close();
     }
@@ -66,9 +70,20 @@ class GmailMessagesDataSource implements GmailMessagesFetcher {
         plainTextBody: cuerpo.plainText,
         htmlBody: cuerpo.html,
       );
+    } on gmail.DetailedApiRequestError catch (e) {
+      if (_esErrorDeCuota(e)) throw const GmailQuotaExceededException();
+      rethrow;
     } finally {
       client.close();
     }
+  }
+
+  /// Gmail devuelve 429, o a veces 403 con "Quota exceeded" en el
+  /// mensaje, cuando se supera el límite de unidades por minuto.
+  bool _esErrorDeCuota(gmail.DetailedApiRequestError e) {
+    if (e.status == 429) return true;
+    return e.status == 403 &&
+        (e.message?.toLowerCase().contains('quota exceeded') ?? false);
   }
 
   void _extraerCuerpo(gmail.MessagePart? part, _CuerpoDecodificado acc) {

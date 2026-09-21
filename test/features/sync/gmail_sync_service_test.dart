@@ -18,6 +18,7 @@ import 'package:wazuu/features/categorization/domain/repositories/categorias_rep
 import 'package:wazuu/features/categorization/domain/repositories/reglas_categorizacion_repository.dart';
 import 'package:wazuu/features/gmail/domain/entities/gmail_connection.dart';
 import 'package:wazuu/features/gmail/domain/repositories/gmail_auth_repository.dart';
+import 'package:wazuu/features/sync/domain/exceptions/gmail_quota_exceeded_exception.dart';
 import 'package:wazuu/features/sync/domain/gmail_sync_service.dart';
 import 'package:wazuu/features/sync/domain/repositories/gmail_messages_fetcher.dart';
 import 'package:wazuu/features/sync/domain/repositories/sync_state_repository.dart';
@@ -45,8 +46,12 @@ class _FakeGmailAuthRepository implements GmailAuthRepository {
 }
 
 class _FakeGmailMessagesFetcher implements GmailMessagesFetcher {
-  _FakeGmailMessagesFetcher(this._correosPorId, {List<String>? idsNuevos})
-    : _idsNuevos = idsNuevos ?? _correosPorId.keys.toList();
+  _FakeGmailMessagesFetcher(
+    this._correosPorId, {
+    List<String>? idsNuevos,
+    Set<String> idsConCuotaExcedida = const {},
+  }) : _idsNuevos = idsNuevos ?? _correosPorId.keys.toList(),
+       _idsConCuotaExcedida = idsConCuotaExcedida;
 
   final Map<String, RawEmail> _correosPorId;
   // Separado de `_correosPorId`: la reparación de vínculos re-pide un
@@ -54,8 +59,10 @@ class _FakeGmailMessagesFetcher implements GmailMessagesFetcher {
   // test puede simular "sin mensajes nuevos" y aun así dejar ese correo
   // disponible para re-parsearse.
   final List<String> _idsNuevos;
+  final Set<String> _idsConCuotaExcedida;
   List<String>? remitentesRecibidos;
   DateTime? despuesRecibido;
+  final List<String> idsPedidos = [];
 
   @override
   Future<List<String>> listarIds({
@@ -72,7 +79,13 @@ class _FakeGmailMessagesFetcher implements GmailMessagesFetcher {
   Future<RawEmail> obtenerCorreo({
     required String accessToken,
     required String messageId,
-  }) async => _correosPorId[messageId]!;
+  }) async {
+    if (_idsConCuotaExcedida.contains(messageId)) {
+      throw const GmailQuotaExceededException();
+    }
+    idsPedidos.add(messageId);
+    return _correosPorId[messageId]!;
+  }
 }
 
 class _FakeBanksRepository implements BanksRepository {
@@ -133,6 +146,7 @@ class _FakeTarjetasRepository implements TarjetasRepository {
 class _FakeTransaccionesRepository implements TransaccionesRepository {
   final List<String> hashesInsertados = [];
   final List<String?> ultimos4Insertados = [];
+  final Set<String> emailIdsInsertados = {};
   Map<int, List<TransaccionHuerfana>> huerfanasPorBanco = {};
   final List<({int transaccionId, int tarjetaId, String ultimos4})>
   vinculaciones = [];
@@ -155,7 +169,13 @@ class _FakeTransaccionesRepository implements TransaccionesRepository {
     if (hashesInsertados.contains(hashDedupe)) return false;
     hashesInsertados.add(hashDedupe);
     ultimos4Insertados.add(tarjetaUltimos4Digitos);
+    emailIdsInsertados.add(emailIdOrigen);
     return true;
+  }
+
+  @override
+  Future<Set<String>> obtenerEmailIdsExistentes(List<String> ids) async {
+    return ids.where(emailIdsInsertados.contains).toSet();
   }
 
   @override
@@ -264,10 +284,13 @@ void main() {
     _FakeTransaccionesRepository? transaccionesRepository,
     _FakeSyncStateRepository? syncStateRepository,
     _FakeTarjetasRepository? tarjetasRepository,
+    _FakeGmailMessagesFetcher? messagesFetcher,
   }) {
     return GmailSyncService(
       gmailAuthRepository: _FakeGmailAuthRepository(conexion),
-      messagesFetcher: _FakeGmailMessagesFetcher(correos, idsNuevos: idsNuevos),
+      messagesFetcher:
+          messagesFetcher ??
+          _FakeGmailMessagesFetcher(correos, idsNuevos: idsNuevos),
       banksRepository: _FakeBanksRepository(bancos),
       tarjetasRepository: tarjetasRepository ?? _FakeTarjetasRepository(),
       categorizationEngine: CategorizationEngine(
@@ -349,6 +372,76 @@ void main() {
 
     expect(segundaCorrida.transaccionesNuevas, 0);
   });
+
+  test(
+    'un correo ya sincronizado no se vuelve a pedir a Gmail en el '
+    'siguiente sync (aunque `listarIds` lo vuelva a devolver, por el '
+    'filtro de solo-día de Gmail)',
+    () async {
+      final transacciones = _FakeTransaccionesRepository();
+      final fetcher = _FakeGmailMessagesFetcher({
+        'msg-popular-1': correoPopular,
+      });
+      final servicio = construirServicio(
+        conexion: GmailConnection(
+          email: 'yo@gmail.com',
+          accessToken: 'token',
+          accessTokenExpiry: DateTime.now().add(const Duration(hours: 1)),
+        ),
+        correos: {'msg-popular-1': correoPopular},
+        transaccionesRepository: transacciones,
+        messagesFetcher: fetcher,
+      );
+
+      await servicio.sincronizar();
+      expect(fetcher.idsPedidos, ['msg-popular-1']);
+
+      final segundaCorrida = await servicio.sincronizar();
+
+      expect(segundaCorrida.transaccionesNuevas, 0);
+      // El segundo sync no debió pedir de nuevo el correo ya guardado.
+      expect(fetcher.idsPedidos, ['msg-popular-1']);
+    },
+  );
+
+  test(
+    'si Gmail agota la cuota a mitad de la sincronización, se detiene '
+    'ahí, guarda lo que alcanzó a procesar, y no marca la '
+    'sincronización como completa (para reintentar el resto después)',
+    () async {
+      final transacciones = _FakeTransaccionesRepository();
+      final syncState = _FakeSyncStateRepository();
+      final correoPopular2 = RawEmail(
+        id: 'msg-popular-2',
+        from: correoPopular.from,
+        subject: correoPopular.subject,
+        plainTextBody: correoPopular.plainTextBody,
+      );
+      final fetcher = _FakeGmailMessagesFetcher(
+        {'msg-popular-1': correoPopular, 'msg-popular-2': correoPopular2},
+        idsNuevos: ['msg-popular-1', 'msg-popular-2'],
+        idsConCuotaExcedida: {'msg-popular-2'},
+      );
+      final servicio = construirServicio(
+        conexion: GmailConnection(
+          email: 'yo@gmail.com',
+          accessToken: 'token',
+          accessTokenExpiry: DateTime.now().add(const Duration(hours: 1)),
+        ),
+        correos: {},
+        transaccionesRepository: transacciones,
+        syncStateRepository: syncState,
+        messagesFetcher: fetcher,
+      );
+
+      final resultado = await servicio.sincronizar();
+
+      expect(resultado.transaccionesNuevas, 1);
+      expect(resultado.error, isNotNull);
+      expect(transacciones.hashesInsertados, hasLength(1));
+      expect(syncState.registrada, isNull);
+    },
+  );
 
   test('un correo que ningún parser reconoce se ignora', () async {
     final servicio = construirServicio(

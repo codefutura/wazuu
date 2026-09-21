@@ -2,7 +2,7 @@
 /// CLAUDE.md). Centralizados aquí para que los futuros DAOs de cada
 /// feature no repitan strings sueltos.
 abstract final class DbSchema {
-  static const version = 2;
+  static const version = 3;
 }
 
 abstract final class UsuariosTable {

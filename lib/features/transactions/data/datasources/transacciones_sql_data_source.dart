@@ -84,6 +84,26 @@ class TransaccionesSqlDataSource {
     );
   }
 
+  /// De `ids` (IDs de correo de Gmail), cuáles ya generaron una
+  /// transacción guardada — el sync los usa para no volver a pedirle
+  /// el correo completo a Gmail ni re-parsearlo (`after:` de Gmail solo
+  /// filtra por día, así que sin esto se re-descargaría todo lo del día
+  /// en cada sincronización).
+  Future<Set<String>> obtenerEmailIdsExistentes(List<String> ids) async {
+    if (ids.isEmpty) return {};
+    final placeholders = List.filled(ids.length, '?').join(',');
+    final filas = await _db.query(
+      TransaccionesTable.table,
+      columns: [TransaccionesTable.emailIdOrigen],
+      where: '${TransaccionesTable.emailIdOrigen} IN ($placeholders)',
+      whereArgs: ids,
+    );
+    return {
+      for (final fila in filas)
+        fila[TransaccionesTable.emailIdOrigen]! as String,
+    };
+  }
+
   Future<List<TransaccionHuerfana>> obtenerHuerfanasPorBanco(
     int bancoId,
   ) async {

@@ -32,6 +32,12 @@ abstract final class AppDatabase {
             await seedReglasCategorizacion(db);
           }
         }
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_transacciones_email_id_origen
+              ON ${TransaccionesTable.table}(${TransaccionesTable.emailIdOrigen})
+          ''');
+        }
       },
     );
   }
@@ -122,6 +128,10 @@ abstract final class AppDatabase {
     await db.execute('''
       CREATE INDEX idx_transacciones_fecha
         ON ${TransaccionesTable.table}(${TransaccionesTable.fecha})
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_transacciones_email_id_origen
+        ON ${TransaccionesTable.table}(${TransaccionesTable.emailIdOrigen})
     ''');
 
     await db.execute('''

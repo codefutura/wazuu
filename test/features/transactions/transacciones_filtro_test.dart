@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wazuu/features/transactions/presentation/providers/transacciones_filtro_provider.dart';
 
@@ -46,4 +47,25 @@ void main() {
 
     expect(filtro.esFiltroExplicito, isTrue);
   });
+
+  test(
+    'establecerRangoFechas sube "hasta" al final del día, para incluir '
+    'transacciones de ese día con hora real (no solo medianoche)',
+    () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      container
+          .read(transaccionesFiltroControllerProvider.notifier)
+          .establecerRangoFechas(
+            DateTime(2026, 9, 1),
+            DateTime(2026, 9, 20), // como lo devuelve el date picker: medianoche
+          );
+
+      final filtro = container.read(transaccionesFiltroControllerProvider);
+
+      expect(filtro.desde, DateTime(2026, 9, 1));
+      expect(filtro.hasta, DateTime(2026, 9, 20, 23, 59, 59, 999));
+    },
+  );
 }

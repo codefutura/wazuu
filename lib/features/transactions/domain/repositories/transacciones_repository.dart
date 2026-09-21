@@ -51,6 +51,11 @@ abstract interface class TransaccionesRepository {
     required int tarjetaId,
   });
 
+  /// De `ids` (IDs de correo de Gmail), cuáles ya generaron una
+  /// transacción guardada — usado por el sync para no volver a pedirle
+  /// esos correos a Gmail ni re-parsearlos.
+  Future<Set<String>> obtenerEmailIdsExistentes(List<String> ids);
+
   /// Transacciones de `bancoId` sin tarjeta asociada — incluye a las
   /// que se sincronizaron antes de esta versión, cuando todavía no se
   /// guardaba `tarjeta_ultimos_4_digitos` (por eso no las encuentra

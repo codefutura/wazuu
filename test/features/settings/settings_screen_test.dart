@@ -213,6 +213,9 @@ class _FakeTransaccionesRepository implements TransaccionesRepository {
     required int transaccionId,
     required int categoriaId,
   }) async {}
+
+  @override
+  Future<Set<String>> obtenerEmailIdsExistentes(List<String> ids) async => {};
 }
 
 void main() {

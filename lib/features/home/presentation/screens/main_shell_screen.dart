@@ -61,12 +61,6 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
         },
       );
 
-      ref
-        ..invalidate(transaccionesFiltradasProvider)
-        ..invalidate(resumenMensualProvider)
-        ..invalidate(tarjetasConsumoProvider)
-        ..invalidate(presupuestosConProgresoProvider);
-
       if (!mounted) return;
       final mensaje = resultado.error ?? _mensajeResultado(resultado);
       ScaffoldMessenger.of(
@@ -78,6 +72,14 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('No se pudo sincronizar: $e')));
     } finally {
+      // Aunque algo haya fallado a mitad de camino, ya puede haber
+      // transacciones nuevas guardadas — se invalida siempre para que
+      // el Resumen las muestre sin necesitar navegar y volver.
+      ref
+        ..invalidate(transaccionesFiltradasProvider)
+        ..invalidate(resumenMensualProvider)
+        ..invalidate(tarjetasConsumoProvider)
+        ..invalidate(presupuestosConProgresoProvider);
       if (mounted) {
         setState(() {
           _sincronizando = false;

@@ -112,6 +112,9 @@ class _FakeTransaccionesRepository implements TransaccionesRepository {
     required int tarjetaId,
     required String tarjetaUltimos4Digitos,
   }) async {}
+
+  @override
+  Future<Set<String>> obtenerEmailIdsExistentes(List<String> ids) async => {};
 }
 
 class _FakeCategoriasRepository implements CategoriasRepository {

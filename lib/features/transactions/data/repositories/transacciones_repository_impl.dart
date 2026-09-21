@@ -82,6 +82,11 @@ class TransaccionesRepositoryImpl implements TransaccionesRepository {
   }
 
   @override
+  Future<Set<String>> obtenerEmailIdsExistentes(List<String> ids) {
+    return _dataSource.obtenerEmailIdsExistentes(ids);
+  }
+
+  @override
   Future<List<TransaccionHuerfana>> obtenerHuerfanasPorBanco(int bancoId) {
     return _dataSource.obtenerHuerfanasPorBanco(bancoId);
   }

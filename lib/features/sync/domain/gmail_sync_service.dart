@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
+import '../../bank_parsers/domain/entities/raw_email.dart';
 import '../../bank_parsers/domain/parsers/bank_email_parser_registry.dart';
 import '../../banks/domain/entities/banco_conectado.dart';
 import '../../banks/domain/entities/bank_option.dart';
@@ -12,6 +13,7 @@ import '../../gmail/domain/entities/gmail_connection.dart';
 import '../../gmail/domain/repositories/gmail_auth_repository.dart';
 import '../../transactions/domain/repositories/transacciones_repository.dart';
 import 'entities/sync_result.dart';
+import 'exceptions/gmail_quota_exceeded_exception.dart';
 import 'repositories/gmail_messages_fetcher.dart';
 import 'repositories/sync_state_repository.dart';
 
@@ -69,21 +71,51 @@ class GmailSyncService {
     final ultimaSincronizacion = await syncStateRepository
         .obtenerUltimaSincronizacion();
 
-    final ids = await messagesFetcher.listarIds(
-      accessToken: conexion.accessToken,
-      remitentes: bancos.map((b) => b.remitenteEmail).toList(),
-      despues: ultimaSincronizacion,
-    );
+    List<String> ids;
+    try {
+      ids = await messagesFetcher.listarIds(
+        accessToken: conexion.accessToken,
+        remitentes: bancos.map((b) => b.remitenteEmail).toList(),
+        despues: ultimaSincronizacion,
+      );
+    } on GmailQuotaExceededException {
+      return const SyncResult(
+        transaccionesNuevas: 0,
+        error: _mensajeCuotaExcedida,
+      );
+    }
+
+    // `after:` de Gmail solo filtra por día completo, así que
+    // `listarIds` puede devolver correos que ya se sincronizaron antes
+    // en el mismo día — se descartan aquí, antes de pedirle su
+    // contenido completo a Gmail, para no re-descargar ni re-parsear
+    // lo que ya se guardó.
+    final yaSincronizados = await transaccionesRepository
+        .obtenerEmailIdsExistentes(ids);
 
     var nuevas = 0;
+    var cuotaAgotada = false;
     onProgress?.call(0, ids.length);
     for (var i = 0; i < ids.length; i++) {
       try {
         final id = ids[i];
-        final email = await messagesFetcher.obtenerCorreo(
-          accessToken: conexion.accessToken,
-          messageId: id,
-        );
+        if (yaSincronizados.contains(id)) continue;
+
+        RawEmail email;
+        try {
+          email = await messagesFetcher.obtenerCorreo(
+            accessToken: conexion.accessToken,
+            messageId: id,
+          );
+        } on GmailQuotaExceededException {
+          // Se detiene aquí sin marcar la sincronización como
+          // completa (no se actualiza `ultimaSincronizacion`), así el
+          // próximo intento recoge los correos que faltaron — los ya
+          // guardados no se vuelven a pedir gracias a
+          // `yaSincronizados`.
+          cuotaAgotada = true;
+          break;
+        }
 
         final match = parserRegistry.parse(email);
         if (match == null) continue;
@@ -131,17 +163,27 @@ class GmailSyncService {
       }
     }
 
-    final vinculadas = await _repararVinculosDeTarjeta(
-      conexion: conexion,
-      bancos: bancos,
-    );
+    // Si ya se agotó la cuota, un llamado más (aunque sea para
+    // reparación de vínculos) solo repetiría el mismo error.
+    final vinculadas = cuotaAgotada
+        ? 0
+        : await _repararVinculosDeTarjeta(conexion: conexion, bancos: bancos);
 
-    await syncStateRepository.registrarSincronizacion(DateTime.now());
+    if (!cuotaAgotada) {
+      await syncStateRepository.registrarSincronizacion(DateTime.now());
+    }
+
     return SyncResult(
       transaccionesNuevas: nuevas,
       transaccionesVinculadas: vinculadas,
+      error: cuotaAgotada ? _mensajeCuotaExcedida : null,
     );
   }
+
+  static const _mensajeCuotaExcedida =
+      'Gmail limitó las solicitudes por unos minutos. Se guardó lo que '
+      'alcanzó a procesar — vuelve a sincronizar en un momento para '
+      'traer el resto.';
 
   /// Transacciones que se sincronizaron antes de guardar
   /// `tarjeta_ultimos_4_digitos` (o antes de que su tarjeta existiera)
