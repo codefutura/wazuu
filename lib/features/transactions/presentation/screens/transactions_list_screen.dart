@@ -56,10 +56,10 @@ class TransactionsListScreen extends ConsumerWidget {
                 onRefresh: () =>
                     ref.refresh(transaccionesFiltradasProvider.future),
                 child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   itemCount: transacciones.length + encabezados,
                   separatorBuilder: (context, index) =>
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return _TotalesPorBanco(

@@ -7,6 +7,7 @@ import '../../features/home/presentation/screens/main_shell_screen.dart';
 import '../../features/onboarding/presentation/screens/connect_gmail_screen.dart';
 import '../../features/onboarding/presentation/screens/initial_budget_screen.dart';
 import '../../features/onboarding/presentation/screens/privacy_carousel_screen.dart';
+import '../widgets/skeleton_box.dart';
 import 'app_flow_controller.dart';
 import 'app_flow_state.dart';
 
@@ -21,8 +22,7 @@ class AppGate extends ConsumerWidget {
     final flow = ref.watch(appFlowControllerProvider);
 
     return flow.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(body: _AppGateSkeleton()),
       error: (error, stackTrace) => Scaffold(
         body: Center(child: Text('No se pudo iniciar Wazuu: $error')),
       ),
@@ -37,6 +37,39 @@ class AppGate extends ConsumerWidget {
           AppFlowLogin() => const LoginScreen(),
           AppFlowHome() => const MainShellScreen(),
         },
+      ),
+    );
+  }
+}
+
+/// Se muestra mientras se resuelve a qué pantalla ir (cuenta local +
+/// progreso de onboarding) — aún no se sabe cuál será el destino final,
+/// así que imita una estructura genérica de pantalla en vez de un
+/// spinner centrado (sección 4 de CLAUDE.md).
+class _AppGateSkeleton extends StatelessWidget {
+  const _AppGateSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SkeletonBox(width: 140, height: 20),
+            const SizedBox(height: 24),
+            const SkeletonBox(height: 90, borderRadius: 16),
+            const SizedBox(height: 16),
+            const SkeletonBox(height: 90, borderRadius: 16),
+            const SizedBox(height: 32),
+            const SkeletonBox(width: 100, height: 14),
+            const SizedBox(height: 12),
+            const SkeletonBox(height: 56, borderRadius: 12),
+            const SizedBox(height: 12),
+            const SkeletonBox(height: 56, borderRadius: 12),
+          ],
+        ),
       ),
     );
   }

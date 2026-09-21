@@ -68,11 +68,25 @@ class TransaccionTile extends ConsumerWidget {
       if (transaccion.tarjetaApodo != null) transaccion.tarjetaApodo!,
     ].join(' • ');
 
+    final colorCategoria = colorFromHex(transaccion.categoria.color);
+
     return Card(
+      // Sin esto, el margen por defecto del Card (4px en las 4
+      // direcciones) se suma al separator del ListView y a la llegada
+      // a los bordes de pantalla — el espaciado entre tarjetas lo
+      // controla únicamente el separator de abajo.
+      margin: EdgeInsets.zero,
+      // Toque sutil: un tinte apenas perceptible del color de la
+      // categoría en vez del blanco/superficie plano por defecto.
+      color: Color.alphaBlend(
+        colorCategoria.withValues(alpha: 0.05),
+        Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+      ),
       child: ListTile(
         onTap: () => _recategorizar(context, ref),
+        contentPadding: const EdgeInsets.only(left: 16, right: 8),
         leading: CircleAvatar(
-          backgroundColor: colorFromHex(transaccion.categoria.color),
+          backgroundColor: colorCategoria,
           child: Icon(
             CategoryIconMapper.iconFor(transaccion.categoria.icono),
             color: Colors.white,

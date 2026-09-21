@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../categorization/data/providers/categorization_providers.dart';
 import '../providers/transacciones_filtro_provider.dart';
 
@@ -101,6 +102,22 @@ class FiltrosBar extends ConsumerWidget {
                               end: filtro.hasta!,
                             )
                           : null,
+                      // El botón "Guardar" del diálogo por defecto queda
+                      // casi invisible (texto pequeño sin fondo) — se le
+                      // da más peso visual solo dentro de este diálogo.
+                      builder: (context, child) => Theme(
+                        data: Theme.of(context).copyWith(
+                          textButtonTheme: TextButtonThemeData(
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.teal,
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        child: child!,
+                      ),
                     );
                     if (rango != null) {
                       controller.establecerRangoFechas(rango.start, rango.end);

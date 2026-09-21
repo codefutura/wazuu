@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
 import 'app_text_theme.dart';
@@ -8,6 +9,15 @@ import 'app_text_theme.dart';
 /// `ThemeMode.system` es el valor por defecto de la app (ver sección 3 de
 /// CLAUDE.md); el usuario puede forzarlo desde Ajustes.
 abstract final class AppTheme {
+  // El fondo del AppBar es teal oscuro en ambos temas — el status bar
+  // (Android) y sus íconos (Android e iOS) deben quedar claros para
+  // seguir siendo legibles ahí arriba.
+  static const _appBarOverlayStyle = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
+  );
+
   static ThemeData get light {
     const colorScheme = ColorScheme.light(
       primary: AppColors.teal,
@@ -35,10 +45,11 @@ abstract final class AppTheme {
         AppColors.lightTextSecondary,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.lightBackground,
-        foregroundColor: AppColors.lightTextPrimary,
+        backgroundColor: AppColors.teal,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        systemOverlayStyle: _appBarOverlayStyle,
       ),
       cardTheme: CardThemeData(
         color: AppColors.lightSurface,
@@ -103,10 +114,11 @@ abstract final class AppTheme {
         AppColors.darkTextSecondary,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.darkBackground,
-        foregroundColor: AppColors.darkTextPrimary,
+        backgroundColor: AppColors.teal,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        systemOverlayStyle: _appBarOverlayStyle,
       ),
       cardTheme: CardThemeData(
         color: AppColors.darkSurface,

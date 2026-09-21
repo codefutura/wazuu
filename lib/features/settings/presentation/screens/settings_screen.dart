@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/bancos_conectados_section.dart';
+import '../widgets/gmail_connection_section.dart';
 import '../widgets/tarjetas_section.dart';
 import '../widgets/tasa_cambio_section.dart';
 import '../widgets/tema_selector.dart';
@@ -20,6 +21,8 @@ class SettingsScreen extends StatelessWidget {
           TemaSelector(),
           SizedBox(height: 16),
           TasaCambioSection(),
+          SizedBox(height: 16),
+          GmailConnectionSection(),
           SizedBox(height: 16),
           BancosConectadosSection(),
           SizedBox(height: 16),

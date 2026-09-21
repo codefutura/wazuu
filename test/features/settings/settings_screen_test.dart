@@ -14,6 +14,9 @@ import 'package:wazuu/features/banks/domain/repositories/banks_repository.dart';
 import 'package:wazuu/features/cards/data/providers/tarjetas_repository_provider.dart';
 import 'package:wazuu/features/cards/domain/entities/tarjeta.dart';
 import 'package:wazuu/features/cards/domain/repositories/tarjetas_repository.dart';
+import 'package:wazuu/features/gmail/data/providers/gmail_auth_repository_provider.dart';
+import 'package:wazuu/features/gmail/domain/entities/gmail_connection.dart';
+import 'package:wazuu/features/gmail/domain/repositories/gmail_auth_repository.dart';
 import 'package:wazuu/features/settings/data/providers/usuario_settings_repository_provider.dart';
 import 'package:wazuu/features/settings/domain/repositories/usuario_settings_repository.dart';
 import 'package:wazuu/features/settings/presentation/screens/settings_screen.dart';
@@ -136,6 +139,31 @@ class _FakeTarjetasRepository implements TarjetasRepository {
   }
 }
 
+class _FakeGmailAuthRepository implements GmailAuthRepository {
+  GmailConnection? connection;
+
+  @override
+  Future<GmailConnection?> currentConnection() async => connection;
+
+  @override
+  Future<GmailConnection> connect() async {
+    connection = GmailConnection(
+      email: 'usuario@gmail.com',
+      accessToken: 'fake-token',
+      accessTokenExpiry: DateTime.now().add(const Duration(hours: 1)),
+    );
+    return connection!;
+  }
+
+  @override
+  Future<void> disconnect() async {
+    connection = null;
+  }
+
+  @override
+  Future<GmailConnection?> obtenerConexionValida() async => connection;
+}
+
 class _FakeTransaccionesRepository implements TransaccionesRepository {
   @override
   Future<int> reasignarTarjetaHuerfanas({
@@ -209,6 +237,9 @@ void main() {
           transaccionesRepositoryProvider.overrideWith(
             (ref) async => _FakeTransaccionesRepository(),
           ),
+          gmailAuthRepositoryProvider.overrideWithValue(
+            _FakeGmailAuthRepository(),
+          ),
         ],
         child: MaterialApp(
           theme: AppTheme.light,
@@ -240,9 +271,10 @@ void main() {
     expect(banksRepo.conectados, {'bhd', 'banreservas'});
 
     // --- Tarjetas: crear ---
-    await tester.drag(find.byType(ListView), const Offset(0, -600));
+    await tester.ensureVisible(find.text('Aún no tienes tarjetas.'));
     await tester.pumpAndSettle();
     expect(find.text('Aún no tienes tarjetas.'), findsOneWidget);
+    await tester.ensureVisible(find.widgetWithIcon(IconButton, Icons.add));
     await tester.tap(find.widgetWithIcon(IconButton, Icons.add));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -260,6 +292,16 @@ void main() {
     await tester.tap(find.text('Crear tarjeta'));
     await tester.pumpAndSettle();
 
+    // El ListView virtualiza sus hijos fuera de pantalla: cerrar el modal
+    // de creación corre el scroll y la sección de Tarjetas se desmonta del
+    // árbol, así que hay que reencontrarla antes de las aserciones.
+    await tester.dragUntilVisible(
+      find.text('Visa Gold'),
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('Visa Gold'), findsOneWidget);
     expect(find.text('•••• 2319 · Banco'), findsOneWidget);
 
@@ -269,6 +311,13 @@ void main() {
     await tester.tap(find.byIcon(Icons.delete_outline));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Eliminar').last);
+    await tester.pumpAndSettle();
+
+    await tester.dragUntilVisible(
+      find.text('Aún no tienes tarjetas.'),
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Visa Gold'), findsNothing);

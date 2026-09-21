@@ -84,6 +84,11 @@ class TendenciaChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 24,
+                // Sin esto, fl_chart calcula su propio intervalo "bonito"
+                // para el eje — no necesariamente 1 — y termina llamando
+                // getTitlesWidget en x fraccionarios (0.5, 1.5...) que al
+                // truncar caen en el mismo mes dos veces.
+                interval: 1,
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
                   if (index < 0 || index >= puntos.length) {

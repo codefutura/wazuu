@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/app_flow/app_flow_controller.dart';
+import '../../../../core/constants/urls.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../data/providers/auth_repository_provider.dart';
@@ -136,6 +138,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Text('Iniciar sesión'),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => launchUrl(
+                      Uri.parse(AppUrls.privacyPolicy),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    child: const Text('Política de Privacidad'),
                   ),
                 ],
               ),

@@ -43,7 +43,13 @@ class GmailSyncService {
   final SyncStateRepository syncStateRepository;
   final BankEmailParserRegistry parserRegistry;
 
-  Future<SyncResult> sincronizar() async {
+  /// `onProgress` reporta (correos procesados, total) mientras se
+  /// recorren los correos nuevos — la UI lo usa para mostrar un
+  /// porcentaje real en vez de un spinner indeterminado (sección 4 de
+  /// CLAUDE.md: "carga progresiva, no bloqueante").
+  Future<SyncResult> sincronizar({
+    void Function(int procesados, int total)? onProgress,
+  }) async {
     final conexion = await gmailAuthRepository.obtenerConexionValida();
     if (conexion == null) {
       return const SyncResult(
@@ -70,53 +76,59 @@ class GmailSyncService {
     );
 
     var nuevas = 0;
-    for (final id in ids) {
-      final email = await messagesFetcher.obtenerCorreo(
-        accessToken: conexion.accessToken,
-        messageId: id,
-      );
-
-      final match = parserRegistry.parse(email);
-      if (match == null) continue;
-
-      final banco = _bancoParaOpcion(bancos, match.bankOptionId);
-      if (banco == null) continue;
-
-      final categoria = await categorizationEngine.categorizar(
-        comercio: match.transaccion.comercio,
-        tipo: match.transaccion.tipoTransaccion,
-      );
-
-      int? tarjetaId;
-      final ultimos4 = match.transaccion.tarjetaUltimos4Digitos;
-      if (ultimos4 != null) {
-        final tarjeta = await tarjetasRepository.obtenerPorUltimos4Digitos(
-          bancoId: banco.id,
-          ultimos4Digitos: ultimos4,
+    onProgress?.call(0, ids.length);
+    for (var i = 0; i < ids.length; i++) {
+      try {
+        final id = ids[i];
+        final email = await messagesFetcher.obtenerCorreo(
+          accessToken: conexion.accessToken,
+          messageId: id,
         );
-        tarjetaId = tarjeta?.id;
-      }
 
-      final insertada = await transaccionesRepository.insertar(
-        monto: match.transaccion.monto,
-        moneda: match.transaccion.moneda,
-        fecha: match.transaccion.fecha,
-        comercio: match.transaccion.comercio,
-        estado: match.transaccion.estado,
-        tipoTransaccion: match.transaccion.tipoTransaccion,
-        categoriaId: categoria.id,
-        tarjetaId: tarjetaId,
-        bancoId: banco.id,
-        emailIdOrigen: match.transaccion.emailIdOrigen,
-        hashDedupe: _hashDedupe(
+        final match = parserRegistry.parse(email);
+        if (match == null) continue;
+
+        final banco = _bancoParaOpcion(bancos, match.bankOptionId);
+        if (banco == null) continue;
+
+        final categoria = await categorizationEngine.categorizar(
+          comercio: match.transaccion.comercio,
+          tipo: match.transaccion.tipoTransaccion,
+        );
+
+        int? tarjetaId;
+        final ultimos4 = match.transaccion.tarjetaUltimos4Digitos;
+        if (ultimos4 != null) {
+          final tarjeta = await tarjetasRepository.obtenerPorUltimos4Digitos(
+            bancoId: banco.id,
+            ultimos4Digitos: ultimos4,
+          );
+          tarjetaId = tarjeta?.id;
+        }
+
+        final insertada = await transaccionesRepository.insertar(
           monto: match.transaccion.monto,
+          moneda: match.transaccion.moneda,
           fecha: match.transaccion.fecha,
           comercio: match.transaccion.comercio,
+          estado: match.transaccion.estado,
+          tipoTransaccion: match.transaccion.tipoTransaccion,
+          categoriaId: categoria.id,
+          tarjetaId: tarjetaId,
           bancoId: banco.id,
-        ),
-        tarjetaUltimos4Digitos: ultimos4,
-      );
-      if (insertada) nuevas++;
+          emailIdOrigen: match.transaccion.emailIdOrigen,
+          hashDedupe: _hashDedupe(
+            monto: match.transaccion.monto,
+            fecha: match.transaccion.fecha,
+            comercio: match.transaccion.comercio,
+            bancoId: banco.id,
+          ),
+          tarjetaUltimos4Digitos: ultimos4,
+        );
+        if (insertada) nuevas++;
+      } finally {
+        onProgress?.call(i + 1, ids.length);
+      }
     }
 
     final vinculadas = await _repararVinculosDeTarjeta(
