@@ -75,12 +75,25 @@ void main() {
     icono: 'attach_money',
   );
 
+  const finanzas = Categoria(
+    id: 3,
+    nombre: 'Finanzas',
+    tipo: TipoTransaccion.gasto,
+    color: '#64748B',
+    icono: 'account_balance',
+  );
+
   late _FakeCategoriasRepository categorias;
   late _FakeReglasCategorizacionRepository reglas;
   late CategorizationEngine engine;
 
   setUp(() {
-    categorias = _FakeCategoriasRepository([alimentos, otro, otroIngreso]);
+    categorias = _FakeCategoriasRepository([
+      alimentos,
+      finanzas,
+      otro,
+      otroIngreso,
+    ]);
     reglas = _FakeReglasCategorizacionRepository();
     engine = CategorizationEngine(categorias, reglas);
   });
@@ -143,6 +156,47 @@ void main() {
         tipo: TipoTransaccion.gasto,
       );
       expect(resultado, alimentos);
+    },
+  );
+
+  test(
+    'sin reglas que calcen, usa la categoría sugerida por el parser',
+    () async {
+      final resultado = await engine.categorizar(
+        comercio: 'THE FACTORY HKA DOMINICANA SRL',
+        tipo: TipoTransaccion.gasto,
+        categoriaSugerida: 'Finanzas',
+      );
+      expect(resultado, finanzas);
+    },
+  );
+
+  test(
+    'una regla aprendida tiene prioridad sobre la categoría sugerida',
+    () async {
+      await reglas.upsert(
+        palabraClaveComercio: 'THE FACTORY',
+        categoriaId: alimentos.id,
+      );
+
+      final resultado = await engine.categorizar(
+        comercio: 'THE FACTORY HKA DOMINICANA SRL',
+        tipo: TipoTransaccion.gasto,
+        categoriaSugerida: 'Finanzas',
+      );
+      expect(resultado, alimentos);
+    },
+  );
+
+  test(
+    'una categoría sugerida de un tipo incompatible se ignora, cae en Otro',
+    () async {
+      final resultado = await engine.categorizar(
+        comercio: 'Depósito',
+        tipo: TipoTransaccion.ingreso,
+        categoriaSugerida: 'Finanzas', // Finanzas es de tipo gasto.
+      );
+      expect(resultado, otroIngreso);
     },
   );
 

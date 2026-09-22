@@ -52,6 +52,41 @@ void main() {
     expect(transaccion.tarjetaUltimos4Digitos, '5472');
   });
 
+  test(
+    'parsea un correo real de transferencia/pago a un beneficiario',
+    () {
+      final fixtureTransferencia = File(
+        'test/fixtures/bank_emails/bhd_transferencia.html',
+      ).readAsStringSync();
+      final transaccion = parser.parse(email(body: fixtureTransferencia));
+
+      expect(transaccion, isNotNull);
+      expect(transaccion!.monto, 6420.00);
+      expect(transaccion.moneda, Moneda.dop);
+      expect(transaccion.fecha, DateTime(2026, 9, 22, 10, 13));
+      expect(transaccion.comercio, 'COMERCIO EJEMPLO SRL');
+      expect(transaccion.estado, EstadoTransaccion.aprobada);
+      expect(transaccion.tipoTransaccion, TipoTransaccion.gasto);
+      expect(transaccion.tarjetaUltimos4Digitos, isNull);
+      expect(transaccion.categoriaSugerida, 'Finanzas');
+    },
+  );
+
+  test(
+    'devuelve null ante un tipo de transacción que no reconoce todavía',
+    () {
+      final fixtureTransferencia = File(
+        'test/fixtures/bank_emails/bhd_transferencia.html',
+      ).readAsStringSync();
+      final otroTipo = fixtureTransferencia.replaceFirst(
+        'Transacciones entre productos BHD y a otros Bancos',
+        'Otro tipo de transacción no confirmado',
+      );
+      final result = parser.parse(email(body: otroTipo));
+      expect(result, isNull);
+    },
+  );
+
   test('ignora correos de un remitente que no es BHD', () {
     final result = parser.parse(email(from: 'notificaciones@otrobanco.com'));
     expect(result, isNull);

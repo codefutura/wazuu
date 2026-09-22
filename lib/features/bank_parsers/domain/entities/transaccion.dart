@@ -19,6 +19,7 @@ class Transaccion {
     required this.tipoTransaccion,
     required this.emailIdOrigen,
     this.tarjetaUltimos4Digitos,
+    this.categoriaSugerida,
   });
 
   final double monto;
@@ -29,4 +30,13 @@ class Transaccion {
   final TipoTransaccion tipoTransaccion;
   final String emailIdOrigen;
   final String? tarjetaUltimos4Digitos;
+
+  /// Nombre de categoría que el parser sugiere para este tipo de
+  /// transacción cuando el comercio en sí no sirve como pista (ej. una
+  /// transferencia donde el "comercio" es el nombre del beneficiario,
+  /// que varía en cada correo y nunca va a calzar con una regla de
+  /// palabra clave). El motor de categorización la usa solo si ninguna
+  /// regla aprendida calza — una recategorización manual del usuario
+  /// siempre tiene prioridad.
+  final String? categoriaSugerida;
 }

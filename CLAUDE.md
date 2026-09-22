@@ -142,8 +142,13 @@ antes de insertar una transacción nueva, verificar que ese hash no exista ya.
 ## 7. Parsers de correos bancarios (patrón Adapter)
 
 - Interfaz `BankEmailParser` con método `parse(RawEmail) → Transaccion?`.
-- Una implementación por banco: `BanreservasParser`, `BhdParser`, etc.
-  (empezar con los 2 bancos de los que ya hay ejemplos reales de correo).
+- Una implementación por banco: `BanreservasParser`, `BhdParser`, `PopularParser`
+  — los 3 bancos soportados hasta ahora, cada uno con al menos un correo real
+  confirmado.
+- Un mismo banco puede necesitar varias plantillas internas (ej. `BhdParser`
+  reconoce tanto consumo con tarjeta como transferencia/pago a un beneficiario)
+  — cada plantilla se valida por separado dentro del parser y cualquier valor
+  no confirmado devuelve `null` en vez de adivinar.
 - Cada parser debe tener sus propios tests unitarios con fixtures de HTML/texto
   de correos reales (anonimizados) — sin esto, un cambio de plantilla del banco
   rompe el parser en producción sin aviso.
@@ -152,6 +157,9 @@ antes de insertar una transacción nueva, verificar que ese hash no exista ya.
 - Reconocer tanto correos de gasto (compra/consumo) como de ingreso
   (depósito/transferencia recibida) — son plantillas distintas dentro del mismo
   banco.
+- Un parser puede sugerir una categoría (`Transaccion.categoriaSugerida`) cuando
+  el "comercio" no sirve como palabra clave reutilizable (ej. el beneficiario de
+  una transferencia, que varía en cada correo) — ver sección 8.
 
 ---
 
@@ -162,6 +170,10 @@ antes de insertar una transacción nueva, verificar que ese hash no exista ya.
   esto rompería la promesa de privacidad del producto.
 - Categorías base: Compras, Alimentos, Finanzas, Servicios, Transporte,
   Suscripciones, Otro (+ categorías de ingreso: Nómina, Transferencia, Otro ingreso).
+- Orden de prioridad al categorizar: 1) una regla aprendida que calce (el
+  usuario ya recategorizó ese comercio a mano — siempre gana), 2) la
+  `categoriaSugerida` que trajo el parser si la hay (ver sección 7), 3) "Otro"
+  / "Otro ingreso" según el tipo.
 - Si no hay match, cae en "Otro" y el usuario puede recategorizar — esa
   corrección debe crear o actualizar una regla automáticamente.
 
@@ -197,8 +209,8 @@ de continuar a la siguiente — no avanzar automáticamente varias fases sin rev
   cifrado con sqlcipher, migraciones iniciales.
 - **Fase 4 — Integración Gmail real:** OAuth con `google_sign_in` + `googleapis`,
   scope readonly, storage seguro de tokens, selección de bancos.
-- **Fase 5 — Parsers de los 2 bancos disponibles:** con tests unitarios y
-  fixtures reales.
+- **Fase 5 — Parsers de los bancos disponibles:** con tests unitarios y
+  fixtures reales (Banreservas, BHD, Popular hasta ahora).
 - **Fase 6 — Motor de categorización:** reglas + aprendizaje simple por
   recategorización manual.
 - **Fase 7 — Pantallas principales:** resumen mensual, lista de transacciones,

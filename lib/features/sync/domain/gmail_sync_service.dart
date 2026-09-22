@@ -126,6 +126,7 @@ class GmailSyncService {
         final categoria = await categorizationEngine.categorizar(
           comercio: match.transaccion.comercio,
           tipo: match.transaccion.tipoTransaccion,
+          categoriaSugerida: match.transaccion.categoriaSugerida,
         );
 
         int? tarjetaId;

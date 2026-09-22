@@ -15,10 +15,14 @@ class CategorizationEngine {
   /// Encuentra la categoría para `comercio` cruzando las reglas
   /// aprendidas. Si ninguna calza — o calza pero es de un tipo
   /// incompatible, ej. una regla de gasto en una transacción de
-  /// ingreso — cae en "Otro"/"Otro ingreso" según `tipo`.
+  /// ingreso — usa `categoriaSugerida` (si el parser dio una) antes de
+  /// caer en "Otro"/"Otro ingreso" según `tipo`. Una regla aprendida
+  /// siempre tiene prioridad sobre la sugerencia del parser: si el
+  /// usuario ya recategorizó ese comercio a mano, se respeta.
   Future<Categoria> categorizar({
     required String comercio,
     required TipoTransaccion tipo,
+    String? categoriaSugerida,
   }) async {
     final reglas = await _reglas.obtenerTodas();
     final categorias = await _categorias.obtenerTodas();
@@ -32,6 +36,14 @@ class CategorizationEngine {
         regla.palabraClaveComercio.toUpperCase(),
       )) {
         return categoria;
+      }
+    }
+
+    if (categoriaSugerida != null) {
+      for (final categoria in categorias) {
+        if (categoria.tipo == tipo && categoria.nombre == categoriaSugerida) {
+          return categoria;
+        }
       }
     }
 
